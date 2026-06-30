@@ -1,0 +1,17 @@
+{
+    "name": "Calcolatore Pizza Professional Master",
+    "short_name": "PizzaMaster",
+    "description": "Controllo Geometria Assistita, Multi-Blend Scomposto e Termo-Logica per Impasti",
+    "start_url": "index.html",
+    "display": "standalone",
+    "background_color": "#f8f9fa",
+    "theme_color": "#e67e22",
+    "orientation": "portrait-primary",
+    "icons": [
+        {
+            "src": "icona_pizza_master.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

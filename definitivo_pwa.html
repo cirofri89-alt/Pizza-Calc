@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calcolatore Pizza Professionale Avanzato - Master v4.3.2</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#e67e22">
+    <style>
+        :root {
+            --primary: #e67e22;
+            --secondary: #2c3e50;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #333;
+            --accent: #27ae60;
+            --blue: #2980b9;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1250px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--primary);
+        }
+        h1 { margin: 0; color: var(--secondary); }
+        
+        .grid-2x2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .full-width-area {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.08);
+            border-top: 4px solid var(--primary);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .card.accent-border { border-top: 4px solid var(--accent); }
+        .card.blue-border { border-top: 4px solid var(--blue); }
+        
+        .card-title {
+            font-size: 1.3rem;
+            color: var(--secondary);
+            margin-top: 0;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-row-3 {
+            display: grid;
+            grid-template-columns: 2.5fr 0.8fr 0.8fr;
+            gap: 10px;
+            margin-bottom: 10px;
+            align-items: center;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+        .form-row-3 label {
+            margin-bottom: 0;
+            font-size: 0.85rem;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input:disabled, select:disabled {
+            background-color: #f1f2f6;
+            color: #a4b0be;
+            cursor: not-allowed;
+            border: 1px dashed #ced6e0;
+        }
+        textarea {
+            font-family: inherit;
+            resize: vertical;
+            min-height: 120px;
+        }
+        small {
+            display: block;
+            margin-top: 5px;
+            color: #7f8c8d;
+            font-size: 0.82rem;
+            line-height: 1.3;
+        }
+        .results {
+            margin-top: 15px;
+            background: #fdf2e9;
+            padding: 15px;
+            border-left: 5px solid var(--primary);
+            border-radius: 4px;
+        }
+        .card.accent-border .results {
+            background: #eafaf1;
+            border-left: 5px solid var(--accent);
+        }
+        .results table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .results th, .results td {
+            padding: 8px;
+            text-align: left;
+        }
+        .results td:last-child {
+            text-align: right;
+            font-weight: bold;
+        }
+        .results th { border-bottom: 2px solid #ddd; }
+        .results td { border-bottom: 1px solid #eee; }
+        .total-row { font-weight: bold; color: var(--secondary); background: rgba(0,0,0,0.03); }
+        
+        .status-saved {
+            color: var(--accent);
+            font-size: 0.85rem;
+            font-weight: bold;
+            margin-top: 5px;
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .grid-2x2 { grid-template-columns: 1fr; }
+            .form-row-3 { grid-template-columns: 1fr; gap: 5px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🍕 Calcolatore Pizza Professional Master v4.3.2</h1>
+        <p>Controllo Geometria Assistita, Multi-Blend Scomposto, Prefermenti, Tempi di Maturazione e Termo-Logica</p>
+    </header>
+
+    <div class="grid-2x2">
+        <div class="card">
+            <div>
+                <div class="card-title">📐 1. Geometria Teglia & Calcolo Panetto</div>
+                <div class="form-group">
+                    <label>Tipo di Pizza / Configurazione Geometria</label>
+                    <select id="geo-tipo" onchange="SwitchGeoUI(); calcolaTutto();">
+                        <option value="teglia_rett">Pizza in Teglia (Rettangolare)</option>
+                        <option value="teglia_tonda">Pizza in Teglia (Rotonda)</option>
+                        <option value="tonda_stile">Pizza Tonda al Piatto (Stile e Disciplinari)</option>
+                    </select>
+                </div>
+
+                <div id="box-teglia-rett" class="geo-opt">
+                    <div class="form-group">
+                        <label>Lato A Teglia (cm)</label>
+                        <input type="number" id="teglia-latoa" value="40" oninput="calcolaTutto()">
+                    </div>
+                    <div class="form-group">
+                        <label>Lato B Teglia (cm)</label>
+                        <input type="number" id="teglia-latob" value="30" oninput="calcolaTutto()">
+                    </div>
+                    <div class="form-group">
+                        <label>Coefficiente Spessore (Fattore di Forma)</label>
+                        <input type="number" id="teglia-coeff" value="0.60" step="0.01" oninput="calcolaTutto()">
+                        <small>💡 <b>Consigli d'uso:</b><br>
+                        • <b>0.60:</b> Standard professionale (Classica Teglia Romana).<br>
+                        • <b>0.65 - 0.70:</b> Impasto alto, soffice o focacciato.<br>
+                        • <b>0.50 - 0.55:</b> Pizza in teglia sottile o scrocchiarella.</small>
+                    </div>
+                </div>
+
+                <div id="box-teglia-tonda" class="geo-opt" style="display:none;">
+                    <div class="form-group">
+                        <label>Diametro Teglia (cm)</label>
+                        <input type="number" id="teglia-diametro" value="32" oninput="calcolaTutto()">
+                    </div>
+                    <div class="form-group">
+                        <label>Coefficiente Spessore</label>
+                        <input type="number" id="teglia-tonda-coeff" value="0.60" step="0.01" oninput="calcolaTutto()">
+                        <small>💡 Basato sull'area reale (π × r²). Mantieni 0.60 per uno spessore standard.</small>
+                    </div>
+                </div>
+
+                <div id="box-tonda-stile" class="geo-opt" style="display:none;">
+                    <div class="form-group">
+                        <label>Stile Storico / Disciplinare Tradizionale</label>
+                        <select id="tonda-stile-select" onchange="calcolaTutto()">
+                            <option value="0.0029">Napoletana Classica (~250g per 33cm)</option>
+                            <option value="0.0023">Romana al Piatto (Sottile/Scrocchiarella ~190g per 33cm)</option>
+                            <option value="0.0035">Pala Romana (Strutturata/Alveolata ~300g per 33cm)</option>
+                            <option value="0.0042">Pizza in Padellino / American Style (~360g per 33cm)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Diametro Pizza Desiderato (cm)</label>
+                        <input type="number" id="tonda-diametro" value="33" oninput="calcolaTutto()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="results" style="background:#eef7f2; border-left-color: var(--accent);">
+                <strong>Risultato Analisi Geometria:</strong>
+                <div style="font-size: 1.3rem; color: var(--accent); font-weight: bold; margin-top:5px;">
+                    Peso Singolo Panetto: <span id="res-panetto-peso">0</span> g
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div>
+                <div class="card-title">⚖️ 2. Bilanciamento Base Formula</div>
+                <div class="form-group">
+                    <label>Numero di Unità (Panetti / Teglie)</label>
+                    <input type="number" id="base-numero" value="1" oninput="calcolaTutto()">
+                </div>
+                <div class="form-group">
+                    <label>Idratazione Richiesta (% di Acqua su Farina)</label>
+                    <input type="number" id="base-acqua" value="70" step="0.5" oninput="calcolaTutto()">
+                    <small>Linee Guida: 55-60% per Romana | 62-67% per Napoletana | 75-85% per Teglia ad alta idratazione.</small>
+                </div>
+                <div class="form-group">
+                    <label>Percentuale Sale (% su Farina)</label>
+                    <input type="number" id="base-sale" value="2.5" step="0.1" oninput="calcolaTutto()">
+                </div>
+                <div class="form-group">
+                    <label>Percentuale Grassi (Olio / Strutto % su Farina)</label>
+                    <input type="number" id="base-olio" value="2" step="0.1" oninput="calcolaTutto()">
+                </div>
+                <div class="form-group">
+                    <label>Fattore Sfrido / Perdita in Ciotola (%)</label>
+                    <input type="number" id="base-sfrido" value="2" step="0.5" oninput="calcolaTutto()">
+                    <small>Compensa i residui nell'impastatrice o l'evaporazione in fase di staglio (2-4% consigliato).</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid-2x2">
+        <div class="card">
+            <div>
+                <div class="card-title">🍄 3. Agente Lievitante e Tecniche Fermentative</div>
+                <div class="form-group">
+                    <label>Metodo di Lievitazione</label>
+                    <select id="tipo-lievito" onchange="SwitchLievitoUI(); calcolaTutto();">
+                        <option value="lbd">Lievito di Birra (Diretto)</option>
+                        <option value="licoli">Lievito Madre Liquido (Li.Co.Li. 100% idr.)</option>
+                        <option value="lms">Lievito Madre Solido (50% idr.)</option>
+                        <option value="biga">Biga Tradizionale (45% idr.)</option>
+                        <option value="poolish">Poolish Fluido (100% idr.)</option>
+                    </select>
+                </div>
+
+                <div id="box-lbd" class="lievito-opt">
+                    <div class="form-group">
+                        <label>Tipo di Lievito di Birra</label>
+                        <select id="lbd-stato" onchange="calcolaTutto()">
+                            <option value="fresco">Fresco in Cubetto</option>
+                            <option value="secco">Secco Disidratato (Moltiplica l'efficacia x3)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Percentuale Lievito (% su Farina Totale)</label>
+                        <input type="number" id="pct-lbd" value="1.5" step="0.05" oninput="calcolaTutto()">
+                    </div>
+                </div>
+
+                <div id="box-lm" class="lievito-opt" style="display:none;">
+                    <div class="form-group">
+                        <label>Percentuale Pasta Madre (% su Farina Totale)</label>
+                        <input type="number" id="pct-lm" value="20" step="1" oninput="calcolaTutto()">
+                    </div>
+                </div>
+
+                <div id="box-prefermenti" class="lievito-opt" style="display:none;">
+                    <div class="form-group">
+                        <label>Lievito usato nel Prefermento</label>
+                        <select id="pref-lbd-stato" onchange="calcolaTutto()">
+                            <option value="fresco">Fresco in Cubetto</option>
+                            <option value="secco">Secco Disidratato</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Quota Farina da inserire nel Prefermento (%)</label>
+                        <input type="number" id="pct-pref-farina" value="30" step="5" oninput="calcolaTutto()">
+                        <small>Standard: 30% per rinfreschi parziali, 100% per Biga/Poolish totale.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Percentuale Lievito sulla Farina del Prefermento (%)</label>
+                        <input type="number" id="pct-pref-lbd" value="1" step="0.1" oninput="calcolaTutto()">
+                    </div>
+                </div>
+            </div>
+
+            <div class="results" style="background:#fffcf4; border-left-color: var(--primary);">
+                <strong>📋 Consigli Tecnici di Dosaggio (Taratura Target):</strong>
+                <div id="res-consigli-lievito" style="font-size: 0.85rem; color: #555; margin-top:5px; line-height: 1.4;">
+                    Seleziona i parametri per visualizzare i consigli personalizzati sulla base reologica.
+                </div>
+            </div>
+        </div>
+
+        <div class="card accent-border">
+            <div>
+                <div class="card-title">🌾 4. Multi-Mix Avanzato e Database Mulini</div>
+                
+                <div class="form-row-3" style="margin-bottom: 5px; font-weight: bold; font-size: 0.8rem;">
+                    <div>Brand / Tipo Farina</div>
+                    <div>Forza (W)</div>
+                    <div>Utilizzo (%)</div>
+                </div>
+
+                <div class="form-row-3">
+                    <select id="tipo-farina1" onchange="autoAssegnaW(1); bilanciaPercentualiFarine(1);">
+                        <option value="CUSTOM">✨ Farina Personalizzata...</option>
+                        <option value="Caputo Pizzeria (Sacco Blu)" selected>Caputo Pizzeria (W 260)</option>
+                        <option value="Caputo Cuoco (Sacco Rosso)">Caputo Cuoco (W 320)</option>
+                        <option value="Caputo Nuvola">Caputo Nuvola (W 270)</option>
+                        <option value="Caputo Nuvola Super">Caputo Nuvola Super (W 330)</option>
+                        <option value="Caputo Manitoba Oro">Caputo Manitoba Oro (W 380)</option>
+                        <option value="Caputo Tipo 1">Caputo Tipo 1 (W 270)</option>
+                        <option value="Molino Vigevano Vesuvio">Molino Vigevano Vesuvio (W 280)</option>
+                        <option value="Molino Vigevano Pizza in Teglia">Molino Vigevano Teglia (W 350)</option>
+                        <option value="5 Stagioni Super">5 Stagioni Super (W 330)</option>
+                        <option value="Petra 1 (Molino Quaglia)">Petra 1 Tipo 1 (W 290)</option>
+                        <option value="Farina Tipo 1 Generica">Farina Tipo 1 Standard (W 240)</option>
+                        <option value="Farina Tipo 2 Generica">Farina Tipo 2 Standard (W 220)</option>
+                        <option value="Semola Rimacinata Cereal">Semola Rimacinata (W 220)</option>
+                        <option value="Farina Integrale Generica">Integrale Pura (W 190)</option>
+                    </select>
+                    <input type="number" id="w-farina1" value="260" oninput="calcolaTutto()">
+                    <input type="number" id="pct-farina1" value="100" min="0" max="100" oninput="bilanciaPercentualiFarine(1)">
+                </div>
+
+                <div class="form-row-3">
+                    <select id="tipo-farina2" onchange="autoAssegnaW(2); bilanciaPercentualiFarine(2);" disabled>
+                        <option value="CUSTOM">✨ Farina Personalizzata...</option>
+                        <option value="Caputo Pizzeria (Sacco Blu)">Caputo Pizzeria (W 260)</option>
+                        <option value="Caputo Cuoco (Sacco Rosso)" selected>Caputo Cuoco (W 320)</option>
+                        <option value="Caputo Nuvola">Caputo Nuvola (W 270)</option>
+                        <option value="Caputo Nuvola Super">Caputo Nuvola Super (W 330)</option>
+                        <option value="Caputo Manitoba Oro">Caputo Manitoba Oro (W 380)</option>
+                        <option value="Caputo Tipo 1">Caputo Tipo 1 (W 270)</option>
+                        <option value="Molino Vigevano Vesuvio">Molino Vigevano Vesuvio (W 280)</option>
+                        <option value="Molino Vigevano Pizza in Teglia">Molino Vigevano Teglia (W 350)</option>
+                        <option value="5 Stagioni Super">5 Stagioni Super (W 330)</option>
+                        <option value="Petra 1 (Molino Quaglia)">Petra 1 Tipo 1 (W 290)</option>
+                        <option value="Farina Tipo 1 Generica">Farina Tipo 1 Standard (W 240)</option>
+                        <option value="Farina Tipo 2 Generica">Farina Tipo 2 Standard (W 220)</option>
+                        <option value="Semola Rimacinata Cereal">Semola Rimacinata (W 220)</option>
+                        <option value="Farina Integrale Generica">Integrale Pura (W 190)</option>
+                    </select>
+                    <input type="number" id="w-farina2" value="320" oninput="calcolaTutto()" disabled>
+                    <input type="number" id="pct-farina2" value="0" min="0" max="100" oninput="bilanciaPercentualiFarine(2);" disabled>
+                </div>
+
+                <div class="form-row-3">
+                    <select id="tipo-farina3" onchange="autoAssegnaW(3); bilanciaPercentualiFarine(3);" disabled>
+                        <option value="CUSTOM">✨ Farina Personalizzata...</option>
+                        <option value="Caputo Pizzeria (Sacco Blu)">Caputo Pizzeria (W 260)</option>
+                        <option value="Caputo Cuoco (Sacco Rosso)">Caputo Cuoco (W 320)</option>
+                        <option value="Caputo Nuvola">Caputo Nuvola (W 270)</option>
+                        <option value="Caputo Nuvola Super">Caputo Nuvola Super (W 330)</option>
+                        <option value="Caputo Manitoba Oro">Caputo Manitoba Oro (W 380)</option>
+                        <option value="Caputo Tipo 1">Caputo Tipo 1 (W 270)</option>
+                        <option value="Molino Vigevano Vesuvio">Molino Vigevano Vesuvio (W 280)</option>
+                        <option value="Molino Vigevano Pizza in Teglia">Molino Vigevano Teglia (W 350)</option>
+                        <option value="5 Stagioni Super">5 Stagioni Super (W 330)</option>
+                        <option value="Petra 1 (Molino Quaglia)">Petra 1 Tipo 1 (W 290)</option>
+                        <option value="Farina Tipo 1 Generica">Farina Tipo 1 Standard (W 240)</option>
+                        <option value="Farina Tipo 2 Generica" selected>Farina Tipo 2 Standard (W 220)</option>
+                        <option value="Semola Rimacinata Cereal">Semola Rimacinata (W 220)</option>
+                        <option value="Farina Integrale Generica">Integrale Pura (W 190)</option>
+                    </select>
+                    <input type="number" id="w-farina3" value="220" oninput="calcolaTutto()" disabled>
+                    <input type="number" id="pct-farina3" value="0" min="0" max="100" oninput="bilanciaPercentualiFarine(3);" disabled>
+                </div>
+            </div>
+            
+            <div class="results">
+                <strong>Analisi Reologica Mix:</strong>
+                <table style="margin-top: 5px;">
+                    <tr><td>Controllo di Bilancio (Somma %):</td><td><span id="res-pct-totale">100</span> %</td></tr>
+                    <tr><td>Forza Finale Calcolata (W):</td><td><span id="res-w-finale" style="color:var(--accent); font-weight: bold;">260</span> W</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="full-width-area">
+        <div class="card blue-border">
+            <div>
+                <div class="card-title">🕒 5. Tempi di Maturazione Estimati e Gestione Temperature</div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+                    <div class="form-group">
+                        <label>Temperatura Ambiente (°C)</label>
+                        <input type="number" id="temp-ambiente" value="22" oninput="calcolaTutto()">
+                    </div>
+                    <div class="form-group">
+                        <label>Temperatura Farina (°C)</label>
+                        <input type="number" id="temp-farina" value="21" oninput="calcolaTutto()">
+                    </div>
+                    <div class="form-group">
+                        <label>Riscaldamento Impastatrice (°C)</label>
+                        <input type="number" id="temp-spirale" value="3" oninput="calcolaTutto()">
+                        <small>Fattore attrito: 1-2°C a mano, 3-4°C spirale, 6-9°C spirale veloce.</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Temperatura Finale Impasto (°C)</label>
+                        <input type="number" id="temp-target" value="24" oninput="calcolaTutto()">
+                        <small>Target ideale: 23°C - 25°C.</small>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 15px;">
+                    <div class="results" style="background:#eaf2f8; border-left-color: var(--blue);">
+                        <strong>🔬 Controllo Termico (Temperatura Acqua):</strong>
+                        <div style="font-size: 1.4rem; color: var(--blue); font-weight: bold; margin-top: 5px;">
+                            Usa Acqua a: <span id="res-temp-acqua">0</span> °C
+                        </div>
+                        <small>Calcolo dinamico inverso basato sulla regola della temperatura di controllo.</small>
+                    </div>
+                    <div class="results" style="background:#f4f6f6; border-left-color: var(--secondary);">
+                        <strong>⏳ Finestra di Maturazione Reologica Stima:</strong>
+                        <div id="res-finestra-maturazione" style="font-weight: bold; margin-top: 5px; color: var(--secondary);">
+                            Calcolo in corso...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card accent-border">
+            <div class="card-title">📋 6. Tabella di Impasto e Bilanciamento Fasi Scomposte</div>
+            <div class="results" style="background:transparent; border-left:none; padding:0;">
+                <table id="tabella-ricetta"></table>
+            </div>
+        </div>
+
+        <div class="card blue-border">
+            <div class="card-title">📝 7. Diario dei Log di Impasto e Note Tecniche</div>
+            <div class="form-group">
+                <label for="diario-note">Registra qui anomalie, tempistiche reali ed esiti di cottura:</label>
+                <textarea id="diario-note" placeholder="Inserisci qui i dati della sessione..." oninput="salvaNote()"></textarea>
+                <div id="status-salvato" class="status-saved">💾 Dati sincronizzati nella cache locale del browser!</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+window.saveTimeout = null;
+
+const databaseMuliniW = {
+    "Caputo Pizzeria (Sacco Blu)": 260,
+    "Caputo Cuoco (Sacco Rosso)": 320,
+    "Caputo Nuvola": 270,
+    "Caputo Nuvola Super": 330,
+    "Caputo Manitoba Oro": 380,
+    "Caputo Tipo 1": 270,
+    "Molino Vigevano Vesuvio": 280,
+    "Molino Vigevano Pizza in Teglia": 350,
+    "5 Stagioni Super": 330,
+    "Petra 1 (Molino Quaglia)": 290,
+    "Farina Tipo 1 Generica": 240,
+    "Farina Tipo 2 Generica": 220,
+    "Semola Rimacinata Cereal": 220,
+    "Farina Integrale Generica": 190
+};
+
+function autoAssegnaW(indice) {
+    const val = document.getElementById('tipo-farina' + indice).value;
+    const inputW = document.getElementById('w-farina' + indice);
+    if (val === "CUSTOM") {
+        inputW.value = 250;
+        inputW.readOnly = false;
+    } else {
+        inputW.value = databaseMuliniW[val] || 250;
+        inputW.readOnly = true;
+    }
+    calcolaTutto();
+}
+
+function SwitchGeoUI() {
+    const tipo = document.getElementById('geo-tipo').value;
+    document.getElementById('box-teglia-rett').style.display = (tipo === 'teglia_rett') ? 'block' : 'none';
+    document.getElementById('box-teglia-tonda').style.display = (tipo === 'teglia_tonda') ? 'block' : 'none';
+    document.getElementById('box-tonda-stile').style.display = (tipo === 'tonda_stile') ? 'block' : 'none';
+}
+
+function SwitchLievitoUI() {
+    const tipo = document.getElementById('tipo-lievito').value;
+    document.getElementById('box-lbd').style.display = (tipo === 'lbd') ? 'block' : 'none';
+    document.getElementById('box-lm').style.display = (tipo === 'licoli' || tipo === 'lms') ? 'block' : 'none';
+    document.getElementById('box-prefermenti').style.display = (tipo === 'biga' || tipo === 'poolish') ? 'block' : 'none';
+}
+
+function gestisciStatoCampiFarine(p1, p2, p3) {
+    const selectF2 = document.getElementById('tipo-farina2');
+    const wF2 = document.getElementById('w-farina2');
+    const pctF2 = document.getElementById('pct-farina2');
+    
+    const selectF3 = document.getElementById('tipo-farina3');
+    const wF3 = document.getElementById('w-farina3');
+    const pctF3 = document.getElementById('pct-farina3');
+
+    if (p1 >= 100) {
+        selectF2.disabled = wF2.disabled = pctF2.disabled = true;
+        pctF2.value = 0;
+        wF2.readOnly = true;
+    } else {
+        selectF2.disabled = pctF2.disabled = false;
+        wF2.disabled = false;
+        wF2.readOnly = (selectF2.value !== "CUSTOM");
+    }
+
+    if ((p1 + parseFloat(pctF2.value || 0)) >= 100) {
+        selectF3.disabled = wF3.disabled = pctF3.disabled = true;
+        pctF3.value = 0;
+        wF3.readOnly = true;
+    } else {
+        selectF3.disabled = pctF3.disabled = false;
+        wF3.disabled = false;
+        wF3.readOnly = (selectF3.value !== "CUSTOM");
+    }
+}
+
+function bilanciaPercentualiFarine(origine) {
+    let p1 = parseFloat(document.getElementById('pct-farina1').value) || 0;
+    let p2 = parseFloat(document.getElementById('pct-farina2').value) || 0;
+    let p3 = parseFloat(document.getElementById('pct-farina3').value) || 0;
+
+    p1 = Math.min(100, Math.max(0, p1));
+    p2 = Math.min(100, Math.max(0, p2));
+    p3 = Math.min(100, Math.max(0, p3));
+
+    if (origine === 1) {
+        document.getElementById('pct-farina1').value = p1;
+        if (p1 === 100) {
+            p2 = 0; p3 = 0;
+            document.getElementById('pct-farina2').value = 0;
+            document.getElementById('pct-farina3').value = 0;
+        } else {
+            let resto = 100 - p1;
+            p2 = resto;
+            p3 = 0;
+            document.getElementById('pct-farina2').value = p2;
+            document.getElementById('pct-farina3').value = p3;
+        }
+    } 
+    else if (origine === 2) {
+        let maxP2 = 100 - p1;
+        if (p2 > maxP2) p2 = maxP2;
+        document.getElementById('pct-farina2').value = p2;
+        p3 = 100 - p1 - p2;
+        document.getElementById('pct-farina3').value = p3;
+    } 
+    else if (origine === 3) {
+        let maxP3 = 100 - p1;
+        if (p3 > maxP3) p3 = maxP3;
+        p2 = 100 - p1 - p3;
+        document.getElementById('pct-farina2').value = p2;
+        document.getElementById('pct-farina3').value = p3;
+    }
+
+    gestisciStatoCampiFarine(p1, p2, p3);
+    calcolaTutto();
+}
+
+function calcolaW() {
+    const p1 = parseFloat(document.getElementById('pct-farina1').value) || 0;
+    const p2 = document.getElementById('pct-farina2').disabled ? 0 : (parseFloat(document.getElementById('pct-farina2').value) || 0);
+    const p3 = document.getElementById('pct-farina3').disabled ? 0 : (parseFloat(document.getElementById('pct-farina3').value) || 0);
+
+    const w1 = parseFloat(document.getElementById('w-farina1').value) || 0;
+    const w2 = p2 > 0 ? (parseFloat(document.getElementById('w-farina2').value) || 0) : 0;
+    const w3 = p3 > 0 ? (parseFloat(document.getElementById('w-farina3').value) || 0) : 0;
+
+    const pTotale = p1 + p2 + p3;
+    document.getElementById('res-pct-totale').innerText = Math.round(pTotale);
+
+    const wFinale = pTotale > 0 ? ((w1 * p1) + (w2 * p2) + (w3 * p3)) / 100 : 0;
+    document.getElementById('res-w-finale').innerText = Math.round(wFinale);
+    return wFinale;
+}
+
+function calcolaPesoPanettoGeometrico() {
+    const tipo = document.getElementById('geo-tipo').value;
+    let pesoPanetto = 0;
+
+    if (tipo === 'teglia_rett') {
+        const a = parseFloat(document.getElementById('teglia-latoa').value) || 0;
+        const b = parseFloat(document.getElementById('teglia-latob').value) || 0;
+        const coeff = parseFloat(document.getElementById('teglia-coeff').value) || 0;
+        pesoPanetto = a * b * coeff;
+    } 
+    else if (tipo === 'teglia_tonda') {
+        const d = parseFloat(document.getElementById('teglia-diametro').value) || 0;
+        const coeff = parseFloat(document.getElementById('teglia-tonda-coeff').value) || 0;
+        const raggio = d / 2;
+        pesoPanetto = (raggio * raggio * Math.PI) * coeff;
+    } 
+    else if (tipo === 'tonda_stile') {
+        const d = parseFloat(document.getElementById('tonda-diametro').value) || 0;
+        const coeffStile = parseFloat(document.getElementById('tonda-stile-select').value) || 0;
+        const raggio = d / 2;
+        pesoPanetto = (raggio * raggio * Math.PI) * (coeffStile * 100); 
+    }
+
+    document.getElementById('res-panetto-peso').innerText = Math.round(pesoPanetto);
+    return Math.round(pesoPanetto);
+}
+
+function ottieniNomeFarina(idSelect) {
+    const v = document.getElementById(idSelect).value;
+    return v === "CUSTOM" ? "Farina Pers." : v.split('(')[0].trim();
+}
+
+function generaRigheScomposteFarina(grammiFarinaFase) {
+    if(grammiFarinaFase <= 0) return "";
+    
+    const p1 = parseFloat(document.getElementById('pct-farina1').value) || 0;
+    const p2 = document.getElementById('pct-farina2').disabled ? 0 : (parseFloat(document.getElementById('pct-farina2').value) || 0);
+    const p3 = document.getElementById('pct-farina3').disabled ? 0 : (parseFloat(document.getElementById('pct-farina3').value) || 0);
+
+    const n1 = ottieniNomeFarina('tipo-farina1');
+    const n2 = ottieniNomeFarina('tipo-farina2');
+    const n3 = ottieniNomeFarina('tipo-farina3');
+
+    let righe = "";
+    if(p1 > 0) righe += `<tr><td style="padding-left:25px; color:#666; font-size:0.85rem;">↳ ${n1} (${p1}%)</td><td style="font-size:0.85rem; color:#666; text-align:right;"> ${(grammiFarinaFase * (p1/100)).toFixed(1)} g</td></tr>`;
+    if(p2 > 0) righe += `<tr><td style="padding-left:25px; color:#666; font-size:0.85rem;">↳ ${n2} (${p2}%)</td><td style="font-size:0.85rem; color:#666; text-align:right;"> ${(grammiFarinaFase * (p2/100)).toFixed(1)} g</td></tr>`;
+    if(p3 > 0) righe += `<tr><td style="padding-left:25px; color:#666; font-size:0.85rem;">↳ ${n3} (${p3}%)</td><td style="font-size:0.85rem; color:#666; text-align:right;"> ${(grammiFarinaFase * (p3/100)).toFixed(1)} g</td></tr>`;
+    return righe;
+}
+
+function generaConsigliLievito(w, tipoLievito, idratazione) {
+    let consiglio = "";
+    if (tipoLievito === 'lbd') {
+        if (w < 240) {
+            consiglio = "⚠️ <b>Farina Debole (W &lt; 240):</b> Riduci il lievito fresco allo 0.5% - 0.8% se lavori a T.A. per evitare il collasso strutturale.";
+        } else if (w >= 240 && w <= 310) {
+            consiglio = "✅ <b>Forza Media (W 240-310):</b> Target ideale per impasti diretti di 8-12 ore a Temperatura Ambiente.";
+        } else {
+            consiglio = "🚀 <b>Alta Forza (W &gt; 310):</b> Struttura eccellente per alta idratazione (" + idratazione + "%). Consigliata maturazione a 4°C.";
+        }
+    } else if (tipoLievito === 'biga' || tipoLievito === 'poolish') {
+        if (w < 280) {
+            consiglio = "⚠️ <b>Attenzione:</b> Prefermento strutturale con mix debole. Per Biga/Poolish si consiglia un W superiore a 300.";
+        } else {
+            consiglio = "💎 <b>Ottima Scelta:</b> La forza del mix regge perfettamente la scomposizione enzimatica del prefermento.";
+        }
+    } else {
+        consiglio = "🧬 <b>Lievito Madre:</b> Bilanciato sull'idratazione. Monitora il pH (3.9 - 4.1) per preservare la maglia glutinica.";
+    }
+    document.getElementById('res-consigli-lievito').innerHTML = consiglio;
+}
+
+function calcolaTutto() {
+    try {
+        const wFinale = calcolaW();
+        
+        const tempAmbiente = parseFloat(document.getElementById('temp-ambiente').value) || 0;
+        const tempFarina = parseFloat(document.getElementById('temp-farina').value) || 0;
+        const tempSpirale = parseFloat(document.getElementById('temp-spirale').value) || 0;
+        const tempTarget = parseFloat(document.getElementById('temp-target').value) || 24;
+        
+        const tempAcqua = (tempTarget * 3) - (tempAmbiente + tempFarina + tempSpirale);
+        document.getElementById('res-temp-acqua').innerText = tempAcqua.toFixed(1);
+
+        let oreMin = Math.max(4, Math.round((wFinale - 160) / 12));
+        let oreMax = Math.max(6, Math.round((wFinale - 120) / 8));
+        if(tempAmbiente > 25) { oreMin = Math.round(oreMin * 0.8); oreMax = Math.round(oreMax * 0.8); }
+        document.getElementById('res-finestra-maturazione').innerHTML = `⏱ T.A. (${tempAmbiente}°C): ~${oreMin}-${oreMax} ore totali.<br><small>Se usi il frigo (4°C), estendi i tempi di maturazione.</small>`;
+
+        const pesoSingoloPanetto = calcolaPesoPanettoGeometrico();
+        const numPanetti = parseFloat(document.getElementById('base-numero').value) || 1;
+        const pctSfrido = parseFloat(document.getElementById('base-sfrido').value) || 0;
+        const pesoMassaTarget = pesoSingoloPanetto * numPanetti * (1 + (pctSfrido / 100));
+
+        const pctIdr = parseFloat(document.getElementById('base-acqua').value) || 70;
+        const pctSale = parseFloat(document.getElementById('base-sale').value) || 0;
+        const pctOlio = parseFloat(document.getElementById('base-olio').value) || 0;
+        const tipoLievito = document.getElementById('tipo-lievito').value;
+
+        generaConsigliLievito(wFinale, tipoLievito, pctIdr);
+
+        let farinaTotale = 0;
+        let acquaTotale = 0;
+        let htmlTabella = `<thead><tr><th>Ingrediente / Fase</th><th style="text-align:right;">Quantità (g)</th></tr></thead><tbody>`;
+
+        if (tipoLievito === 'lbd') {
+            const pLiev = parseFloat(document.getElementById('pct-lbd').value) || 0;
+            const isSecco = document.getElementById('lbd-stato').value === 'secco';
+            const pLievEffettiva = isSecco ? (pLiev / 3) : pLiev;
+
+            let divisore = 1 + (pctIdr / 100) + (pctSale / 100) + (pctOlio / 100) + (pLievEffettiva / 100);
+            farinaTotale = pesoMassaTarget / divisore;
+            acquaTotale = farinaTotale * (pctIdr / 100);
+            const lievitoTotale = farinaTotale * (pLievEffettiva / 100);
+            const saleTotale = farinaTotale * (pctSale / 100);
+            const olioTotale = farinaTotale * (pctOlio / 100);
+
+            htmlTabella += `<tr class="total-row"><td>🍞 Farina Totale Impasto</td><td style="text-align:right;">${farinaTotale.toFixed(1)} g</td></tr>`;
+            htmlTabella += generaRigheScomposteFarina(farinaTotale);
+            htmlTabella += `<tr><td>💧 Acqua Totale (a ${tempAcqua.toFixed(1)}°C)</td><td style="text-align:right;">${acquaTotale.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr><td>🧫 Lievito di Birra (${isSecco?'Secco':'Fresco'})</td><td style="text-align:right;">${lievitoTotale.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr style="border-top:2px dashed #ccc;"><td>🧂 Sale Marino</td><td style="text-align:right;">${saleTotale.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr><td>🌻 Grassi Strutturali (Olio/Strutto)</td><td style="text-align:right;">${olioTotale.toFixed(1)} g</td></tr>`;
+        } 
+        else if (tipoLievito === 'licoli' || tipoLievito === 'lms') {
+            const pctLM = parseFloat(document.getElementById('pct-lm').value) || 0; 
+            let idrLM = (tipoLievito === 'licoli') ? 1.00 : 0.50; 
+
+            let divisore = 1 + (pctIdr / 100) + (pctSale / 100) + (pctOlio / 100);
+            farinaTotale = pesoMassaTarget / divisore;
+            acquaTotale = farinaTotale * (pctIdr / 100);
+
+            const pesoLMTotale = farinaTotale * (pctLM / 100);
+            const farinaNelLM = pesoLMTotale / (1 + idrLM);
+            const acquaNelLM = pesoLMTotale - farinaNelLM;
+
+            const farinaDaAggiungere = farinaTotale - farinaNelLM;
+            const acquaDaAggiungere = acquaTotale - acquaNelLM;
+            const saleTotale = farinaTotale * (pctSale / 100);
+            const olioTotale = farinaTotale * (pctOlio / 100);
+
+            htmlTabella += `<tr style="background:#fcf3cf;"><td>🌾 Coltura Madre (${tipoLievito.toUpperCase()} al ${Math.round(idrLM*100)}%)</td><td style="text-align:right;">${pesoLMTotale.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr><td style="padding-left:15px; font-size:0.85rem; color:#555;">↳ Farina nel LM</td><td style="text-align:right; font-size:0.85rem; color:#555;">${farinaNelLM.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr><td style="padding-left:15px; font-size:0.85rem; color:#555;">↳ Acqua nel LM</td><td style="text-align:right; font-size:0.85rem; color:#555;">${acquaNelLM.toFixed(1)} g</td></tr>`;
+            
+            htmlTabella += `<tr class="total-row"><td>🍞 Farina di Rinfresco Autonoma</td><td style="text-align:right;">${farinaDaAggiungere.toFixed(1)} g</td></tr>`;
+            htmlTabella += generaRigheScomposteFarina(farinaDaAggiungere);
+            htmlTabella += `<tr><td>💧 Acqua di Chiusura Impasto</td><td style="text-align:right;">${acquaDaAggiungere.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr style="border-top:2px dashed #ccc;"><td>🧂 Sale Marino</td><td style="text-align:right;">${saleTotale.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr><td>🌻 Grassi Strutturali (Olio/Strutto)</td><td style="text-align:right;">${olioTotale.toFixed(1)} g</td></tr>`;
+        } 
+        else if (tipoLievito === 'biga' || tipoLievito === 'poolish') {
+            const pctPrefFarina = parseFloat(document.getElementById('pct-pref-farina').value) || 30;
+            let idrPrefermento = (tipoLievito === 'biga') ? 0.45 : 1.00;
+
+            let divisore = 1 + (pctIdr / 100) + (pctSale / 100) + (pctOlio / 100);
+            farinaTotale = pesoMassaTarget / divisore;
+            acquaTotale = farinaTotale * (pctIdr / 100);
+
+            const farinaPrefermento = farinaTotale * (pctPrefFarina / 100);
+            const acquaPrefermento = farinaPrefermento * idrPrefermento;
+
+            const selectStato = document.getElementById('pref-lbd-stato').value;
+            const pctLievInput = parseFloat(document.getElementById('pct-pref-lbd').value) || 0;
+            const pctLievPref = (selectStato === 'secco') ? (pctLievInput / 3) : pctLievInput;
+            const lievitoPrefermento = farinaPrefermento * (pctLievPref / 100);
+
+            const farinaChiusura = farinaTotale - farinaPrefermento;
+            const acquaChiusura = acquaTotale - acquaPrefermento;
+            const saleTotale = farinaTotale * (pctSale / 100);
+            const olioTotale = farinaTotale * (pctOlio / 100);
+
+            htmlTabella += `<tr style="background:#ebdef0;"><td>⚡ Prefermento Strutturale (${tipoLievito.toUpperCase()} al ${pctPrefFarina}%)</td><td style="text-align:right;"><strong>Fase 1</strong></td></tr>`;
+            htmlTabella += `<tr><td style="padding-left:15px;">↳ Farina nel Prefermento</td><td style="text-align:right;">${farinaPrefermento.toFixed(1)} g</td></tr>`;
+            htmlTabella += generaRigheScomposteFarina(farinaPrefermento);
+            htmlTabella += `<tr><td style="padding-left:15px;">↳ Acqua nel Prefermento</td><td style="text-align:right;">${acquaPrefermento.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr><td style="padding-left:15px;">↳ LBD nel Prefermento</td><td style="text-align:right;">${lievitoPrefermento.toFixed(1)} g</td></tr>`;
+
+            htmlTabella += `<tr class="total-row" style="background:#f4f6f6;"><td>🥣 Impasto di Chiusura (Rinfresco)</td><td style="text-align:right;"><strong>Fase 2</strong></td></tr>`;
+            if (farinaChiusura > 0.1) {
+                htmlTabella += `<tr><td style="padding-left:15px;">🍞 Farina Libera di Chiusura</td><td style="text-align:right;">${farinaChiusura.toFixed(1)} g</td></tr>`;
+                htmlTabella += generaRigheScomposteFarina(farinaChiusura);
+            }
+            htmlTabella += `<tr><td>💧 Acqua Libera di Chiusura</td><td style="text-align:right;">${acquaChiusura.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr style="border-top:2px dashed #ccc;"><td>🧂 Sale Marino</td><td style="text-align:right;">${saleTotale.toFixed(1)} g</td></tr>`;
+            htmlTabella += `<tr><td>🌻 Grassi Strutturali (Olio/Strutto)</td><td style="text-align:right;">${olioTotale.toFixed(1)} g</td></tr>`;
+        }
+
+        htmlTabella += `<tr class="total-row" style="background:#eaeded; border-top: 2px solid var(--secondary);"><td>⚖️ PESO TOTALE MASSA USCENTE</td><td style="text-align:right; color:var(--secondary);">${Math.round(pesoMassaTarget)} g</td></tr>`;
+        htmlTabella += `</tbody>`;
+
+        document.getElementById('tabella-ricetta').innerHTML = htmlTabella;
+    } catch (e) {
+        console.error("Errore nel calcolo dinamico:", e);
+    }
+}
+
+function salvaNote() {
+    clearTimeout(window.saveTimeout);
+    document.getElementById('status-salvato').style.display = 'block';
+    window.saveTimeout = setTimeout(() => {
+        const testo = document.getElementById('diario-note').value;
+        localStorage.setItem('pizza_master_log', testo);
+        document.getElementById('status-salvato').style.display = 'none';
+    }, 1200);
+}
+
+function caricaNote() {
+    const salvato = localStorage.getItem('pizza_master_log');
+    if (salvato) {
+        document.getElementById('diario-note').value = salvato;
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    caricaNote();
+    SwitchGeoUI();
+    SwitchLievitoUI();
+    gestisciStatoCampiFarine(100, 0, 0);
+    calcolaTutto();
+});
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+            .then(reg => console.log('Service Worker registrato!', reg))
+            .catch(err => console.error('Errore Service Worker:', err));
+    });
+}
+</script>
+</body>
+</html>
