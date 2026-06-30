@@ -9,7 +9,7 @@
     "orientation": "portrait-primary",
     "icons": [
         {
-            "src": "icona_pizza_master.png",
+            "src": "icona_pizza_master.png?v=2",
             "sizes": "512x512",
             "type": "image/png"
         }
